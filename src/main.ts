@@ -13,13 +13,10 @@ async function bootstrap() {
 
   const dataSource = app.get(DataSource);
 
-  try {
-    await dataSource.initialize();
-    console.log('Database connected');
-  } catch (error) {
-    console.error('Failed to connect to database');
-    console.error(error);
-    process.exit(1);
+  if (dataSource.isInitialized) {
+    console.log('📦 Database connection is active!');
+  } else {
+    console.error('❌ Database connection is NOT initialized!');
   }
 
   await app.listen(process.env.PORT ?? 3000);
