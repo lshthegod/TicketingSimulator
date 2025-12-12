@@ -14,12 +14,15 @@ async function bootstrap() {
   const dataSource = app.get(DataSource);
 
   if (dataSource.isInitialized) {
-    console.log('📦 Database connection is active!');
+    console.log('📦 데이터베이스 연결 성공!');
   } else {
-    console.error('❌ Database connection is NOT initialized!');
+    console.error('❌ 데이터베이스 연결 실패!');
   }
 
-  await app.listen(process.env.PORT ?? 3000);
-  console.log(`Server is running on port ${process.env.PORT ?? 3000}`);
+  const port = process.env.PORT ?? 3000;
+  
+  await app.listen(port);
+  console.log(`서버가 ${port} 포트에서 실행 중입니다.`);
+  console.log(`http://localhost:${port}`);
 }
 bootstrap();

@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ensureDatabaseExists } from './init-db';
+import { ensureDatabaseExists } from './database.utils';
 
 @Module({
   imports: [
-    ConfigModule,
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],  
       inject: [ConfigService],
 
       useFactory: async (
