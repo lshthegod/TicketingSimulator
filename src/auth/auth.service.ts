@@ -5,12 +5,14 @@ import { Repository } from 'typeorm';
 import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
     constructor(
         @InjectRepository(AuthEntity)
         private readonly authRepository: Repository<AuthEntity>,
+        private readonly jwtService: JwtService,
     ) {}
 
     async register(dto: RegisterDto) {
@@ -43,21 +45,20 @@ export class AuthService {
 
     async login(dto: LoginDto) {
         const user = await this.authRepository.findOne({ where: { email: dto.email } });
-
         if (!user) {
             throw new UnauthorizedException('이메일 또는 비밀번호를 확인해주세요.');
         }
 
         const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-
         if (!isPasswordValid) {
             throw new UnauthorizedException('이메일 또는 비밀번호를 확인해주세요.');
         }
 
+        const payload = { id: user.id, nickname: user.nickname, email: user.email };
+        const token = this.jwtService.sign(payload);
+
         return {
-            id: user.id,
-            nickname: user.nickname,
-            email: user.email,
+            accessToken: token,
             message: '로그인 성공',
         };
     }

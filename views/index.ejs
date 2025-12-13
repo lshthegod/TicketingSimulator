@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>티켓팅 서비스</title>
-    <style>
-      body {
-          background-color: white; /* 배경을 무조건 흰색으로 */
-          color: black;            /* 글씨는 검은색으로 */
-      }
-    </style>
-  </head>
-  <body>
-    <h1>환영합니다! <%= message %></h1>
-  </body>
+<head>
+    <title>티켓팅</title>
+</head>
+<body>
+    <nav>
+        <% if (isLoggedIn) { %>
+            <span>환영합니다, <strong><%= user.nickname %></strong>님!</span>
+            <a href="/auth/logout">로그아웃</a>
+        <% } else { %>
+            <a href="/auth/login">로그인</a>
+            <a href="/auth/register">회원가입</a>
+        <% } %>
+    </nav>
+
+    <h1>메인 페이지</h1>
+</body>
 </html>
