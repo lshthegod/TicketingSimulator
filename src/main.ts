@@ -3,10 +3,12 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.use(cookieParser());
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('ejs');
@@ -20,7 +22,7 @@ async function bootstrap() {
   }
 
   const port = process.env.PORT ?? 3000;
-  
+
   await app.listen(port);
   console.log(`서버가 ${port} 포트에서 실행 중입니다.`);
   console.log(`http://localhost:${port}`);

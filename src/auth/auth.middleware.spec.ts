@@ -58,8 +58,8 @@ describe('AuthMiddleware', () => {
       middleware.use(req as Request, res as Response, next);
 
       // [검증]
-      expect(res.locals.user).toBeNull();
-      expect(res.locals.isLoggedIn).toBe(false);
+      expect(res.locals?.user).toBeNull();
+      expect(res.locals?.isLoggedIn).toBe(false);
       expect(next).toHaveBeenCalled(); // 다음으로 진행
     });
 
@@ -85,8 +85,8 @@ describe('AuthMiddleware', () => {
       
       // 3. 결과가 잘 주입되었는지?
       expect(req['user']).toEqual(decodedUser);
-      expect(res.locals.user).toEqual(decodedUser);
-      expect(res.locals.isLoggedIn).toBe(true);
+      expect(res.locals?.user).toEqual(decodedUser);
+      expect(res.locals?.isLoggedIn).toBe(true);
       expect(next).toHaveBeenCalled();
     });
 
@@ -106,8 +106,8 @@ describe('AuthMiddleware', () => {
       // 에러가 났으니 쿠키를 지워야 함 (이름: accessToken)
       expect(res.clearCookie).toHaveBeenCalledWith('accessToken');
       
-      expect(res.locals.user).toBeNull();
-      expect(res.locals.isLoggedIn).toBe(false);
+      expect(res.locals?.user).toBeNull();
+      expect(res.locals?.isLoggedIn).toBe(false);
       expect(next).toHaveBeenCalled(); // 에러가 나도 서버는 계속 돌아야 함
     });
   });
