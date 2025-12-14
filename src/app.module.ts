@@ -8,7 +8,6 @@ import { AuthMiddleware } from './auth/auth.middleware';
 import { JwtService } from '@nestjs/jwt';
 import { EventsModule } from './events/events.module';
 import { SeatsModule } from './seats/seats.module';
-import { ReservationModule } from './reservation/reservation.module';
 import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
@@ -19,7 +18,6 @@ import { ReservationsModule } from './reservations/reservations.module';
     AuthModule,
     EventsModule,
     SeatsModule,
-    ReservationModule,
     ReservationsModule,
   ],
   controllers: [AppController],

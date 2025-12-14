@@ -14,19 +14,29 @@ export class EventsController {
 
   @Get()
   findAll() {
-    return this.eventsService.findAll();
+    return this.eventsService.findAllByOpenAtAsc();
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(+id);
   }
 
+  @Get('time')
+  getServerTime() {
+    return {
+      serverTime: new Date().toISOString(),
+      timestamp: Date.now(),
+    };
+  }
+
+  // 추후 구현
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
     return this.eventsService.update(+id, updateEventDto);
   }
 
+  // 추후 구현
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.eventsService.remove(+id);

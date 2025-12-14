@@ -1,19 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>티켓팅</title>
+    <meta charset="UTF-8">
+    <title>티켓팅 서비스</title>
+    <style>
+        /* 간단한 스타일링 */
+        body { background-color: #fff; color: #333; padding: 20px; font-family: sans-serif; }
+        .event-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+        .status-open { color: green; font-weight: bold; }
+        .status-wait { color: orange; font-weight: bold; }
+        input, textarea { display: block; margin-bottom: 10px; width: 300px; padding: 5px; }
+    </style>
 </head>
 <body>
-    <nav>
+    <nav style="margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
         <% if (isLoggedIn) { %>
-            <span>환영합니다, <strong><%= user.nickname %></strong>님!</span>
-            <a href="/auth/logout">로그아웃</a>
+            <span>👋 환영합니다, <strong><%= user.nickname %></strong>님!</span>
+            <a href="/auth/logout" style="margin-left: 10px;">로그아웃</a>
         <% } else { %>
-            <a href="/auth/login">로그인</a>
+            <a href="/auth/login">로그인</a> | 
             <a href="/auth/register">회원가입</a>
         <% } %>
     </nav>
 
-    <h1>메인 페이지</h1>
+    <h1>🎫 티켓팅 메인 페이지</h1>
+
+    <section>
+        <h2>공연 목록</h2>
+        <% if (events && events.length > 0) { %>
+            <% events.forEach(event => { %>
+                <div class="event-card">
+                    <h3><%= event.title %></h3>
+                    <p><%= event.description %></p>
+                    <p>오픈 시간: <strong><%= new Date(event.openAt).toLocaleString() %></strong></p>
+                    
+                    <% const isOpen = new Date() >= new Date(event.openAt); %>
+                    
+                    <% if (isOpen) { %>
+                        <button class="status-open">예매하기</button>
+                    <% } else { %>
+                        <button disabled>오픈 대기중</button>
+                    <% } %>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p>등록된 공연이 없습니다.</p>
+        <% } %>
+    </section>
+
+    <hr style="margin: 30px 0;">
+
+    <% if (isLoggedIn) { %>
+        <section style="background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
+            <h2>➕ 새 공연 만들기 (관리자용)</h2>
+            <form id="createEventForm">
+                <label>공연 제목</label>
+                <input type="text" name="title" placeholder="예: 임영웅 콘서트" required>
+                
+                <label>공연 설명</label>
+                <textarea name="description" placeholder="설명 입력"></textarea>
+                
+                <label>오픈 시간</label>
+                <input type="datetime-local" name="openAt" required>
+
+                <button type="submit">공연 생성하기</button>
+            </form>
+        </section>
+
+        <script>
+            document.getElementById('createEventForm').addEventListener('submit', async (e) => {
+                e.preventDefault(); // 화면 새로고침 방지
+
+                const formData = new FormData(e.target);
+                const data = {
+                    title: formData.get('title'),
+                    description: formData.get('description'),
+                    // ISO String 변환 (NestJS DTO가 DateString을 원함)
+                    openAt: new Date(formData.get('openAt')).toISOString(),
+                };
+
+                try {
+                    const response = await fetch('/events', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        alert('공연이 생성되었습니다!');
+                        window.location.reload(); // 목록 갱신을 위해 새로고침
+                    } else {
+                        const err = await response.json();
+                        alert('생성 실패: ' + JSON.stringify(err));
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('서버 오류 발생');
+                }
+            });
+        </script>
+    <% } %>
+
 </body>
 </html>
