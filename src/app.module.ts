@@ -6,6 +6,10 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/auth.middleware';
 import { JwtService } from '@nestjs/jwt';
+import { EventsModule } from './events/events.module';
+import { SeatsModule } from './seats/seats.module';
+import { ReservationModule } from './reservation/reservation.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -13,6 +17,10 @@ import { JwtService } from '@nestjs/jwt';
     ConfigModule.forRoot({isGlobal: true}),
     DatabaseModule,
     AuthModule,
+    EventsModule,
+    SeatsModule,
+    ReservationModule,
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtService],
