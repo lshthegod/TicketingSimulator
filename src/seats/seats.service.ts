@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSeatDto } from './dto/create-seat.dto';
+import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SeatEntity } from './entities/seat.entity';
+import { SeatEntity, SeatStatus } from './entities/seat.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -21,5 +22,23 @@ export class SeatsService {
       where: { event: { id: eventId } },
       order: { seatNo: 'ASC' },
      });
+  }
+
+  async createBulk(createBulkSeatsDto: CreateBulkSeatsDto) {
+    const { eventId, rowCount, seatPerCol } = createBulkSeatsDto;
+    const seatsToSave: Partial<SeatEntity>[] = [];
+
+    for (let row = 0; row < rowCount; row++) {
+      const rowChar = String.fromCharCode(65 + row);
+      for (let col = 1; col <= seatPerCol; col++) {
+        seatsToSave.push({
+          eventId: eventId,
+          seatNo: `${rowChar}${col}`,
+          status: SeatStatus.AVAILABLE,
+        });
+      }
+    }
+
+    return await this.seatsRepository.save(seatsToSave);
   }
 }

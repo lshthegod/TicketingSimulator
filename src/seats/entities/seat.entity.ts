@@ -12,6 +12,9 @@ export class SeatEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
+    @Column({name: 'event_id'}) 
+    eventId: number;
+
     @Column({length: 20})
     seatNo: string;
 
@@ -27,6 +30,6 @@ export class SeatEntity {
     @ManyToOne(() => EventEntity, event => event.seats, {
         onDelete: 'CASCADE',
     })
-    @JoinColumn({name: 'eventId'})
+    @JoinColumn({name: 'event_id'})
     event: EventEntity;
 }
