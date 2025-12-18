@@ -1,26 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSeatDto } from './dto/create-seat.dto';
-import { UpdateSeatDto } from './dto/update-seat.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { SeatEntity } from './entities/seat.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class SeatsService {
-  create(createSeatDto: CreateSeatDto) {
-    return 'This action adds a new seat';
+  constructor(
+    @InjectRepository(SeatEntity)
+    private readonly seatsRepository: Repository<SeatEntity>,
+  ) {}
+
+  async create(createSeatDto: CreateSeatDto) {
+    const seat = this.seatsRepository.create(createSeatDto);
+    return await this.seatsRepository.save(seat);
   }
 
-  findAll() {
-    return `This action returns all seats`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} seat`;
-  }
-
-  update(id: number, updateSeatDto: UpdateSeatDto) {
-    return `This action updates a #${id} seat`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} seat`;
+  async findAllByEventId(eventId: number) {
+    return await this.seatsRepository.find({
+      where: { event: { id: eventId } },
+      order: { seatNo: 'ASC' },
+     });
   }
 }

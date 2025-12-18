@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { SeatEntity } from 'src/seats/entities/seat.entity';
 
 @Entity('events')
 export class EventEntity {
@@ -22,4 +23,7 @@ export class EventEntity {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @OneToMany(() => SeatEntity, (seat) => seat.event)
+    seats: SeatEntity[];
 }
