@@ -4,7 +4,9 @@ import {
     Column,
     CreateDateColumn,
     Index,
+    OneToMany,
 } from 'typeorm';
+import { ReservationEntity } from 'src/reservations/entities/reservation.entity';
   
 @Entity('auth')
 export class AuthEntity {
@@ -26,5 +28,8 @@ export class AuthEntity {
       name: 'created_at',
     })
     createdAt: Date;
+
+    @OneToMany(() => ReservationEntity, (reservation) => reservation.userId)
+    reservations: ReservationEntity[];
 }
   

@@ -1,5 +1,6 @@
 import { EventEntity } from 'src/events/entities/event.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { ReservationEntity } from 'src/reservations/entities/reservation.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 
 export enum SeatStatus {
     AVAILABLE = 'AVAILABLE',
@@ -32,4 +33,7 @@ export class SeatEntity {
     })
     @JoinColumn({name: 'event_id'})
     event: EventEntity;
+
+    @OneToOne(() => ReservationEntity, (reservation) => reservation.seat)
+    reservation: ReservationEntity;
 }

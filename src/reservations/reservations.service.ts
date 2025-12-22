@@ -1,26 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateReservationDto } from './dto/create-reservation.dto';
-import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { Repository } from 'typeorm';
+import { ReservationEntity } from './entities/reservation.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { SeatEntity, SeatStatus } from 'src/seats/entities/seat.entity';
 
 @Injectable()
 export class ReservationsService {
-  create(createReservationDto: CreateReservationDto) {
-    return 'This action adds a new reservation';
-  }
+  constructor(
+    @InjectRepository(ReservationEntity)
+    private readonly reservationRepository: Repository<ReservationEntity>,
 
-  findAll() {
-    return `This action returns all reservations`;
-  }
+    @InjectRepository(SeatEntity)
+    private readonly seatRepository: Repository<SeatEntity>,
+  ) {}
 
-  findOne(id: number) {
-    return `This action returns a #${id} reservation`;
-  }
+  async reserve(userId: number, createReservationDto: CreateReservationDto) {
+    const { seatId } = createReservationDto;
+    
+    const seat = await this.seatRepository.findOne({
+      where: { id: seatId },
+      relations: ['reservation'],
+    });
 
-  update(id: number, updateReservationDto: UpdateReservationDto) {
-    return `This action updates a #${id} reservation`;
-  }
+    if (!seat) {
+      throw new NotFoundException('존재하지 않는 좌석입니다.');
+    }
+    if (seat.reservation || seat.status !== SeatStatus.AVAILABLE) {
+      throw new BadRequestException('이미 예약된 좌석입니다.');
+    }
+    const reservation = this.reservationRepository.create({
+      userId: userId,
+      seatId: seatId,
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} reservation`;
+    const savedReservation = await this.reservationRepository.save(reservation);
+
+    // 트랜잭션 처리 필요
+    seat.status = SeatStatus.BOOKED;
+    await this.seatRepository.save(seat);
+
+    return savedReservation;
   }
 }
