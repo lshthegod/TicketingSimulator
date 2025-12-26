@@ -16,13 +16,22 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto, @Res() res: Response) {
     const { accessToken } = await this.authService.login(dto);
-
     // 클라이언트에 쿠키 저장
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
     });
 
+    return res.redirect('/');
+  }
+
+  @Post('guest')
+  async guest(@Res() res: Response) {
+    const { accessToken } = await this.authService.guest();
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    });
     return res.redirect('/');
   }
 }

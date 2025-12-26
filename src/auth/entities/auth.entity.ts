@@ -29,6 +29,9 @@ export class AuthEntity {
     })
     createdAt: Date;
 
+    @Column({ default: false })
+    isGuest: boolean;
+
     @OneToMany(() => ReservationEntity, (reservation) => reservation.userId)
     reservations: ReservationEntity[];
 }

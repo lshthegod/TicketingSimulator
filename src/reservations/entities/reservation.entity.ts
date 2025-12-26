@@ -13,7 +13,7 @@ export class ReservationEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({name: 'user_id'})
+    @Column({name: 'user_id', unsigned: true})
     userId: number;
 
     @Column({name: 'seat_id'})

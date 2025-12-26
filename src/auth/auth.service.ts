@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 
+import { randomInt } from 'crypto';
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -44,7 +46,10 @@ export class AuthService {
     }
 
     async login(dto: LoginDto) {
-        const user = await this.authRepository.findOne({ where: { email: dto.email } });
+        const user = await this.authRepository.findOne({
+            where: { email: dto.email },
+            select: { id: true, email: true, nickname: true, password: true },
+        });
         if (!user) {
             throw new UnauthorizedException('이메일 또는 비밀번호를 확인해주세요.');
         }
@@ -60,6 +65,38 @@ export class AuthService {
         return {
             accessToken: token,
             message: '로그인 성공',
+        };
+    }
+    
+    async guest() {
+        let guestNumStr: string;
+        let exists: AuthEntity | null;
+
+        do {
+            const firstDigit = randomInt(1, 10);
+            const guestNum = `${firstDigit}${Array.from({ length: 9 },() => randomInt(0, 10)).join('')}`;
+
+            guestNumStr = guestNum;
+
+            exists = await this.authRepository.findOne({where: { nickname: `게스트_${guestNumStr}` }});
+        } while (exists);
+                
+        const guestUser = this.authRepository.create({
+            email: `guest_${guestNumStr}@temp.com`,
+            password: await bcrypt.hash(guestNumStr, 10),
+            nickname: `게스트_${guestNumStr}`,
+            isGuest: true,
+        });
+
+        await this.authRepository.save(guestUser);
+
+
+        const payload = { id: guestUser.id, nickname: guestUser.nickname, email: guestUser.email };
+        const token = this.jwtService.sign(payload);
+
+        return {
+            accessToken: token,
+            message: '게스트 로그인 성공',
         };
     }
 }
