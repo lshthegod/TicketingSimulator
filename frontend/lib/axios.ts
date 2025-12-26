@@ -1,11 +1,19 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true, // 쿠키 등 인증 정보 포함
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-export default api;
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  api.interceptors.request.use((config) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+  
+  export default api;

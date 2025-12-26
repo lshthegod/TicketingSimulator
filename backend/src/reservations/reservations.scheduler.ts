@@ -12,8 +12,9 @@ export class ReservationsScheduler {
     private readonly dataSource: DataSource, 
   ) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleExpiredReservations() {
+    this.logger.log('만료된 예약을 처리합니다.');
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -29,6 +30,7 @@ export class ReservationsScheduler {
 
       if (expiredReservations.length === 0) {
         await queryRunner.commitTransaction();
+        this.logger.log('만료된 예약이 없습니다.');
         return;
       }
 

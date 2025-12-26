@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { EventsModule } from './events/events.module';
 import { SeatsModule } from './seats/seats.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     EventsModule,
     SeatsModule,
     ReservationsModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService, JwtService],
