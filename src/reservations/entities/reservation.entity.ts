@@ -2,6 +2,12 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, Prim
 import { AuthEntity } from "src/auth/entities/auth.entity";
 import { SeatEntity } from "src/seats/entities/seat.entity";
 
+export enum ReservationStatus {
+    PENDING = 'PENDING',
+    CONFIRMED = 'CONFIRMED',
+    CANCELLED = 'CANCELLED',
+}
+
 @Entity('reservations')
 export class ReservationEntity {
     @PrimaryGeneratedColumn()
@@ -15,6 +21,12 @@ export class ReservationEntity {
 
     @CreateDateColumn({name: 'created_at'})
     createdAt: Date;
+
+    @Column({type: 'enum', enum: ReservationStatus, default: ReservationStatus.PENDING})
+    status: ReservationStatus;
+
+    @Column({type: 'datetime', nullable: true})
+    expiredAt: Date;
 
     @ManyToOne(() => AuthEntity, (auth) => auth.reservations)
     @JoinColumn({name: 'user_id'})
