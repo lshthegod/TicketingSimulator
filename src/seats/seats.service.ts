@@ -12,11 +12,6 @@ export class SeatsService {
     private readonly seatsRepository: Repository<SeatEntity>,
   ) {}
 
-  async create(createSeatDto: CreateSeatDto) {
-    const seat = this.seatsRepository.create(createSeatDto);
-    return await this.seatsRepository.save(seat);
-  }
-
   async findAllByEventId(eventId: number) {
     return await this.seatsRepository.find({
       where: { event: { id: eventId } },

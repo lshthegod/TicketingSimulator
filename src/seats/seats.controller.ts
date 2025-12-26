@@ -7,11 +7,6 @@ import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
 export class SeatsController {
   constructor(private readonly seatsService: SeatsService) {}
 
-  @Post()
-  create(@Body() createSeatDto: CreateSeatDto) {
-    return this.seatsService.create(createSeatDto);
-  }
-
   @Get('event/:eventId')
   findAllByEventId(@Param('eventId') eventId: string) {
     return this.seatsService.findAllByEventId(+eventId);
