@@ -14,8 +14,6 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const res = await api.post("/auth/login", { email, password });
-      localStorage.setItem("accessToken", res.data.accessToken); // 토큰 저장 가정
-      alert("로그인 성공!");
       router.push("/");
     } catch (err) {
       alert("로그인 실패: 아이디나 비밀번호를 확인하세요.");
