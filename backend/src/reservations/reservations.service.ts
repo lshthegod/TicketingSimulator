@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateReservationDto } from './dto/create-reservation.dto';
+import { ReservationDto } from './dto/reservation.dto';
 import { DataSource, Repository } from 'typeorm';
 import { ReservationEntity, ReservationStatus } from './entities/reservation.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -86,9 +86,12 @@ export class ReservationsService {
       }
 
       reservation.status = ReservationStatus.CONFIRMED;
-
       await queryRunner.manager.save(reservation);
 
+      const seat = reservation.seat;
+      seat.status = SeatStatus.BOOKED;
+      await queryRunner.manager.save(seat);
+      
       await queryRunner.commitTransaction();
 
       return { message: '예약이 최종 확정되었습니다.', reservation };

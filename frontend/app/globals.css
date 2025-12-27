@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Tailwind v4에서는 @tailwind 대신 @import "tailwindcss";를 사용합니다.
+  이제 에러 없이 정상 작동할 것입니다.
+*/
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+/* 기본적인 body 스타일(배경색, 글자색)은 layout.tsx의 className에 
+  이미 적용되어 있으므로 여기서는 제거했습니다.
+  (중복 작성 시 v4에서 설정 충돌로 에러가 발생할 수 있음)
+*/
+
+body {
+  /* 폰트 렌더링 최적화 (표준 CSS) */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- 여기서부터는 커스텀 스크롤바 & 유틸리티입니다 (표준 CSS 사용) --- */
+
+/* 스크롤바 디자인 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 색상 */
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* slate-400 색상 */
+}
+
+/* 로딩 스피너 애니메이션 (나중에 필요할 때 .loader 클래스로 사용) */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-left-color: #3b82f6; /* blue-500 색상 */
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}

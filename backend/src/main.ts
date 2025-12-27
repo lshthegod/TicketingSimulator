@@ -4,10 +4,12 @@ import { AppModule } from './app.module';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
 import cookieParser from 'cookie-parser';
+import morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.use(morgan('dev'));
   app.use(cookieParser());
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
