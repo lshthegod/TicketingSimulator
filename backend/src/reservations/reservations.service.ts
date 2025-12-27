@@ -11,6 +11,14 @@ export class ReservationsService {
     private readonly dataSource: DataSource,
   ) {}
 
+  async findAllByUserId(userId: number) {
+    return await this.dataSource.manager.find(ReservationEntity, {
+      where: { userId },
+      relations: ['seat'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async holdSeat(userId: number, seatId: number) {
     // QueryRunner 생성
     const queryRunner = this.dataSource.createQueryRunner();
