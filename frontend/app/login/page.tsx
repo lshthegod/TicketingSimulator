@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import api from "@/lib/axios";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -14,7 +12,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const res = await api.post("/auth/login", { email, password });
-      router.push("/");
+      window.location.href = "/";
     } catch (err) {
       alert("로그인 실패: 아이디나 비밀번호를 확인하세요.");
     }
@@ -23,9 +21,7 @@ export default function LoginPage() {
   const handleGuestLogin = async () => {
     try {
       const res = await api.post("/auth/guest");
-      localStorage.setItem("accessToken", res.data.accessToken);
-      alert(`게스트(${res.data.nickname})로 로그인되었습니다.`);
-      router.push("/");
+      window.location.href = "/";
     } catch (err) {
       alert("게스트 로그인 실패");
     }

@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { User } from 'src/common/decorators/user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +34,19 @@ export class AuthController {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
     });
+    return res.redirect('/');
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async me(@User() user: any) {
+    console.log(user);
+    return user;
+  }
+
+  @Post('logout')
+  async logout(@Res() res: Response) {
+    res.clearCookie('accessToken');
     return res.redirect('/');
   }
 }
