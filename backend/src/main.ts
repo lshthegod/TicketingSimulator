@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { DataSource } from 'typeorm';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -11,6 +12,13 @@ async function bootstrap() {
   app.use(morgan('dev'));
   app.use(cookieParser());
 
+  app.useGlobalPipes(new ValidationPipe(
+    {
+      forbidNonWhitelisted: true,
+      whitelist: true,
+      transform: true,
+    }
+  ));
   const dataSource = app.get(DataSource);
 
   if (dataSource.isInitialized) {

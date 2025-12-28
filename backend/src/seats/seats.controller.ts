@@ -8,8 +8,8 @@ export class SeatsController {
   constructor(private readonly seatsService: SeatsService) {}
 
   @Get('event/:eventId')
-  findAllByEventId(@Param('eventId') eventId: string) {
-    return this.seatsService.findAllByEventId(+eventId);
+  findAllByEventId(@Param('eventId') eventId: number) {
+    return this.seatsService.findAllByEventId(eventId);
   }
 
   @Post('bulk')

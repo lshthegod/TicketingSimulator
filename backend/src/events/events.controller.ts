@@ -26,19 +26,19 @@ export class EventsController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.eventsService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.eventsService.findOne(id);
   }
 
   // 추후 구현
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(+id, updateEventDto);
+  update(@Param('id') id: number, @Body() updateEventDto: UpdateEventDto) {
+    return this.eventsService.update(id, updateEventDto);
   }
 
   // 추후 구현
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.eventsService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.eventsService.remove(id);
   }
 }
