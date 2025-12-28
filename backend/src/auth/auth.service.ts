@@ -69,22 +69,15 @@ export class AuthService {
     }
     
     async guest() {
-        let guestNumStr: string;
-        let exists: AuthEntity | null;
-
-        do {
-            const firstDigit = randomInt(1, 10);
-            const guestNum = `${firstDigit}${Array.from({ length: 9 },() => randomInt(0, 10)).join('')}`;
-
-            guestNumStr = guestNum;
-
-            exists = await this.authRepository.findOne({where: { nickname: `게스트_${guestNumStr}` }});
-        } while (exists);
+        const firstDigit = randomInt(1, 10);
+        const guestNum = `${firstDigit}${Array.from({ length: 9 },() => randomInt(0, 10)).join('')}`;
                 
         const guestUser = this.authRepository.create({
-            email: `guest_${guestNumStr}@temp.com`,
-            password: await bcrypt.hash(guestNumStr, 10),
-            nickname: `게스트_${guestNumStr}`,
+            email: `guest_${guestNum}@temp.com`,
+            // 임의로 해시화하지 않고 비밀번호를 그대로 저장
+            // password: await bcrypt.hash(guestNum, 10),
+            password: guestNum,
+            nickname: `게스트_${guestNum}`,
             isGuest: true,
         });
 
