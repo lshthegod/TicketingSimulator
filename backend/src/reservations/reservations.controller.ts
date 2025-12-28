@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, UnauthorizedException, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UnauthorizedException, Param, UseGuards } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { ReservationDto } from './dto/reservation.dto';
 import type { Request } from 'express';
@@ -27,7 +27,7 @@ export class ReservationsController {
   }
 
   @Post('confirm/:id')
-  async confirmReservation(@Req() req: Request, @Param('id', ParseIntPipe) reservationId: number) {
+  async confirmReservation(@Req() req: Request, @Param('id') reservationId: number) {
     const user = req['user'];
 
     if (!user) {
