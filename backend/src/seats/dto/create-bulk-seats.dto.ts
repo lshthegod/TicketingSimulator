@@ -14,6 +14,6 @@ export class CreateBulkSeatsDto {
   @IsNotEmpty()
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(16)
   seatPerCol: number;
 }

@@ -121,13 +121,13 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
           <div className="flex flex-col gap-3 items-center w-full max-w-4xl px-4 overflow-x-auto">
             {Object.keys(groupedSeats).sort().map((row) => (
               <div key={row} className="flex items-center gap-4 flex-nowrap">
-                <div className="w-8 text-center font-bold text-gray-500">{row}열</div>
+                <div className="w-8 text-center font-bold whitespace-nowrap text-gray-500">{row}열</div>
                 <div className="flex gap-2">
                   {groupedSeats[row].map((seat) => {
                      const isSelected = selectedSeat?.id === seat.id;
                      const isAvailable = seat.status === "AVAILABLE";
-                     // AVAILABLE이 아니면 모두 '불가' 상태
-                     const isUnavailable = seat.status === "HELD" || seat.status === "SOLD"; 
+                     // AVAILABLE이 아니면 모두 '불가' 상태 (HELD or SOLD)
+                     const isUnavailable = !isAvailable; 
                      
                      const seatNumberOnly = seat.seatNo.replace(row, ""); 
 
@@ -135,7 +135,7 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                       <button
                         key={seat.id}
                         onClick={() => handleSeatClick(seat)}
-                        disabled={!isAvailable} // AVAILABLE 아니면 버튼 비활성화
+                        disabled={isUnavailable} // 예약 불가능하면 클릭 비활성화
                         className={`
                           w-10 h-10 rounded-md text-sm font-semibold transition-all duration-200
                           flex items-center justify-center shadow-sm border
@@ -150,7 +150,7 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                             ? "bg-white hover:bg-blue-50 text-gray-700 border-gray-300 hover:border-blue-400" 
                             : ""}
                           
-                          /* 3. 이미 선점되거나 팔린 좌석 (회색 - 요청사항 반영) */
+                          /* 3. 이미 선점되거나 팔린 좌석 (요청하신 회색 스타일 적용) */
                           ${isUnavailable
                             ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
                             : ""}
@@ -165,10 +165,11 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
             ))}
           </div>
           
-          {/* 범례 (Legend) 추가: 사용자가 색상을 이해하도록 도움 */}
+          {/* 범례 (Legend) */}
           <div className="flex gap-4 mt-8 text-sm text-gray-600">
             <div className="flex items-center"><div className="w-4 h-4 border border-gray-300 bg-white mr-2 rounded"></div>예약가능</div>
             <div className="flex items-center"><div className="w-4 h-4 bg-green-500 mr-2 rounded"></div>선택함</div>
+            {/* 요청하신 클래스와 일치하는 범례 아이콘 */}
             <div className="flex items-center"><div className="w-4 h-4 bg-gray-300 mr-2 rounded"></div>예약불가</div>
           </div>
 
@@ -191,11 +192,10 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
         </>
       )}
 
-      {/* ---------------- 결제 화면 (변경 없음) ---------------- */}
+      {/* ---------------- 결제 화면 (기존 동일) ---------------- */}
       {viewStep === "PAYMENT" && selectedSeat && (
         <div className="w-full max-w-md mt-10 p-6 bg-white border rounded-xl shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-center border-b pb-4">예매 확인 및 결제</h2>
-          {/* ... (이전 코드와 동일) ... */}
            <div className="space-y-4 mb-8">
             <div className="flex justify-between">
               <span className="text-gray-600">선택 좌석</span>
@@ -211,7 +211,6 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
           
-          {/* 결제 수단 UI (생략 없이 유지) */}
           <div className="mb-8">
             <h3 className="font-bold mb-3">결제 수단 선택</h3>
             <div className="space-y-2">
