@@ -34,9 +34,15 @@ export class SeatsService {
       order: { seatNo: 'ASC' },
     });
 
-    await this.redisClient.set(cacheKey, JSON.stringify(seats), 'EX', 1);
+    const slimSeats = seats.map((seat) => ({
+      id: seat.id,
+      no: seat.seatNo,
+      st: seat.status,
+    }));
 
-    return seats;
+    await this.redisClient.set(cacheKey, JSON.stringify(slimSeats), 'EX', 1);
+
+    return slimSeats;
   }
 
   async createBulk(createBulkSeatsDto: CreateBulkSeatsDto) {

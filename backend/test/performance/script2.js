@@ -121,7 +121,7 @@ export default function (data) {
     try {
       const seats = seatsRes.json();
       if (Array.isArray(seats)) {
-        const seat = seats.find((s) => s && s.status === 'AVAILABLE');
+        const seat = seats.find((s) => s && s.st === 'AVAILABLE');
         if (seat) availableSeatId = seat.id;
       }
     } catch (_) {
