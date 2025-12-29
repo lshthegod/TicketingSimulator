@@ -9,6 +9,7 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.setGlobalPrefix('api');
   app.use(morgan('dev'));
   app.use(cookieParser());
 
@@ -31,7 +32,7 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
-  const port = process.env.PORT ?? 3000;
+  const port = process.env.PORT ?? 8080;
 
   await app.listen(port);
   console.log(`서버가 ${port} 포트에서 실행 중입니다.`);
