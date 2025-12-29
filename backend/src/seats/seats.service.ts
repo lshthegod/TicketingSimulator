@@ -4,19 +4,39 @@ import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SeatEntity, SeatStatus } from './entities/seat.entity';
 import { Repository } from 'typeorm';
+import Redis from 'ioredis';
 
 @Injectable()
 export class SeatsService {
+  private readonly redisClient: Redis;
+
   constructor(
     @InjectRepository(SeatEntity)
     private readonly seatsRepository: Repository<SeatEntity>,
-  ) {}
+  ) {
+    this.redisClient = new Redis({
+      host: 'localhost',
+      port: 6379,
+    });
+  }
 
   async findAllByEventId(eventId: number) {
-    return await this.seatsRepository.find({
+    const cacheKey = `seats:event:${eventId}`;
+
+    const cachedSeats = await this.redisClient.get(`seats:event:${eventId}`);
+    if (cachedSeats) {
+      return JSON.parse(cachedSeats);
+    }
+
+    const seats = await this.seatsRepository.find({
       where: { event: { id: eventId } },
+      select: ['id', 'seatNo', 'status'],
       order: { seatNo: 'ASC' },
-     });
+    });
+
+    await this.redisClient.set(cacheKey, JSON.stringify(seats), 'EX', 1);
+
+    return seats;
   }
 
   async createBulk(createBulkSeatsDto: CreateBulkSeatsDto) {

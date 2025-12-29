@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 
+// ✅ [변경] 백엔드 최적화 데이터 구조 (no, st)
+interface SlimSeat {
+  id: number;
+  no: string; // seatNo -> no
+  st: "AVAILABLE" | "HELD" | "SOLD"; // status -> st
+}
+
+// ✅ UI 로직용 구조 (기존 유지)
 interface Seat {
   id: number;
-  eventId: number;
   seatNo: string;
-  // 백엔드 Enum과 일치해야 함 (SOLD 또는 BOOKED)
   status: "AVAILABLE" | "HELD" | "SOLD"; 
 }
 
@@ -29,7 +35,6 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
   const [reservationId, setReservationId] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("CARD");
 
-  // 데이터 리프레시 중인지 표시하기 위한 별도 상태 (화면 전체 로딩과 구분)
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -46,12 +51,20 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
       if (isRefresh) setIsRefreshing(true);
       else setLoading(true);
 
-      const res = await api.get<Seat[]>(`/seats/event/${eventId}`);
+      // ✅ [변경] SlimSeat[] 형태로 받음
+      const res = await api.get<SlimSeat[]>(`/seats/event/${eventId}`);
       
-      const seats = res.data;
+      const slimSeats = res.data;
       const groups: GroupedSeats = {};
 
-      seats.forEach((seat) => {
+      // ✅ [변경] 데이터 매핑 (SlimSeat -> Seat)
+      slimSeats.forEach((slim) => {
+        const seat: Seat = {
+          id: slim.id,
+          seatNo: slim.no,
+          status: slim.st
+        };
+
         const rowMatch = seat.seatNo.match(/[A-Z]+/); 
         const row = rowMatch ? rowMatch[0] : "ETC";
 
@@ -77,10 +90,8 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  // 🔄 새로고침 버튼 핸들러
   const handleRefresh = () => {
     if (resolvedParams) {
-      // 선택된 좌석 초기화 (상태가 변했을 수 있으므로)
       setSelectedSeat(null);
       fetchSeats(resolvedParams.id, true);
     }
@@ -99,7 +110,9 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
       setViewStep("PAYMENT");
     } catch (err: any) {
       alert(err.response?.data?.message || "좌석 선점에 실패했습니다.");
-      if (resolvedParams) fetchSeats(resolvedParams.id);
+      if (err.response?.status === 409 || resolvedParams) {
+        if(resolvedParams) fetchSeats(resolvedParams.id);
+      }
       setSelectedSeat(null);
     }
   };
@@ -127,7 +140,6 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
       {/* ---------------- 좌석 선택 화면 ---------------- */}
       {viewStep === "SEAT_SELECTION" && (
         <>
-          {/* 상단 타이틀 및 새로고침 버튼 영역 */}
           <div className="flex items-center justify-between w-full max-w-4xl px-4 mt-8 mb-6">
             <h2 className="text-3xl font-bold">좌석 선택</h2>
             
@@ -160,13 +172,13 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                 <div className="w-8 text-center font-bold whitespace-nowrap text-gray-500">{row}열</div>
                 <div className="flex gap-2">
                   {groupedSeats[row].map((seat) => {
-                     const isSelected = selectedSeat?.id === seat.id;
-                     const isAvailable = seat.status === "AVAILABLE";
-                     const isUnavailable = !isAvailable; 
-                     
-                     const seatNumberOnly = seat.seatNo.replace(row, ""); 
+                      const isSelected = selectedSeat?.id === seat.id;
+                      const isAvailable = seat.status === "AVAILABLE";
+                      const isUnavailable = !isAvailable; 
+                      
+                      const seatNumberOnly = seat.seatNo.replace(row, ""); 
 
-                     return (
+                      return (
                       <button
                         key={seat.id}
                         onClick={() => handleSeatClick(seat)}
@@ -190,14 +202,14 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                       >
                         {seatNumberOnly}
                       </button>
-                     );
+                      );
                   })}
                 </div>
               </div>
             ))}
           </div>
           
-          {/* 범례 (Legend) */}
+          {/* 범례 */}
           <div className="flex gap-4 mt-8 text-sm text-gray-600">
             <div className="flex items-center"><div className="w-4 h-4 border border-gray-300 bg-white mr-2 rounded"></div>예약가능</div>
             <div className="flex items-center"><div className="w-4 h-4 bg-green-500 mr-2 rounded"></div>선택함</div>
@@ -223,7 +235,7 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
         </>
       )}
 
-      {/* ---------------- 결제 화면 (기존 동일) ---------------- */}
+      {/* ---------------- 결제 화면 ---------------- */}
       {viewStep === "PAYMENT" && selectedSeat && (
         <div className="w-full max-w-md mt-10 p-6 bg-white border rounded-xl shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-center border-b pb-4">예매 확인 및 결제</h2>
