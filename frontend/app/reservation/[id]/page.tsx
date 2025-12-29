@@ -29,6 +29,9 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
   const [reservationId, setReservationId] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("CARD");
 
+  // 데이터 리프레시 중인지 표시하기 위한 별도 상태 (화면 전체 로딩과 구분)
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     params.then(setResolvedParams);
   }, [params]);
@@ -38,9 +41,11 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
     fetchSeats(resolvedParams.id);
   }, [resolvedParams]);
 
-  const fetchSeats = async (eventId: string) => {
+  const fetchSeats = async (eventId: string, isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) setIsRefreshing(true);
+      else setLoading(true);
+
       const res = await api.get<Seat[]>(`/seats/event/${eventId}`);
       
       const seats = res.data;
@@ -68,11 +73,20 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
       alert("좌석 정보를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  // 🔄 새로고침 버튼 핸들러
+  const handleRefresh = () => {
+    if (resolvedParams) {
+      // 선택된 좌석 초기화 (상태가 변했을 수 있으므로)
+      setSelectedSeat(null);
+      fetchSeats(resolvedParams.id, true);
     }
   };
 
   const handleSeatClick = (seat: Seat) => {
-    // ⭐️ AVAILABLE 상태가 아니면 클릭 불가
     if (seat.status !== "AVAILABLE") return;
     setSelectedSeat(seat);
   };
@@ -113,7 +127,29 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
       {/* ---------------- 좌석 선택 화면 ---------------- */}
       {viewStep === "SEAT_SELECTION" && (
         <>
-          <h2 className="text-3xl font-bold my-8">좌석 선택</h2>
+          {/* 상단 타이틀 및 새로고침 버튼 영역 */}
+          <div className="flex items-center justify-between w-full max-w-4xl px-4 mt-8 mb-6">
+            <h2 className="text-3xl font-bold">좌석 선택</h2>
+            
+            <button 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium
+                hover:bg-gray-50 hover:text-blue-600 hover:border-blue-300 transition-all active:scale-95
+                ${isRefreshing ? "opacity-70 cursor-wait" : ""}
+              `}
+            >
+              <svg 
+                className={`w-4 h-4 ${isRefreshing ? "animate-spin text-blue-600" : ""}`} 
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {isRefreshing ? "갱신 중..." : "새로고침"}
+            </button>
+          </div>
+          
           <div className="w-full max-w-2xl bg-gray-300 h-12 mb-10 rounded-t-xl flex items-center justify-center text-gray-600 font-bold shadow-md">
             SCREEN
           </div>
@@ -126,7 +162,6 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                   {groupedSeats[row].map((seat) => {
                      const isSelected = selectedSeat?.id === seat.id;
                      const isAvailable = seat.status === "AVAILABLE";
-                     // AVAILABLE이 아니면 모두 '불가' 상태 (HELD or SOLD)
                      const isUnavailable = !isAvailable; 
                      
                      const seatNumberOnly = seat.seatNo.replace(row, ""); 
@@ -135,22 +170,19 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                       <button
                         key={seat.id}
                         onClick={() => handleSeatClick(seat)}
-                        disabled={isUnavailable} // 예약 불가능하면 클릭 비활성화
+                        disabled={isUnavailable}
                         className={`
                           w-10 h-10 rounded-md text-sm font-semibold transition-all duration-200
                           flex items-center justify-center shadow-sm border
                           
-                          /* 1. 내가 선택한 좌석 (초록색) */
                           ${isSelected 
                             ? "bg-green-500 text-white border-green-600 ring-2 ring-green-300 transform scale-110 z-10" 
                             : ""}
                           
-                          /* 2. 예약 가능한 좌석 (흰색/파란색) */
                           ${isAvailable && !isSelected 
                             ? "bg-white hover:bg-blue-50 text-gray-700 border-gray-300 hover:border-blue-400" 
                             : ""}
                           
-                          /* 3. 이미 선점되거나 팔린 좌석 (요청하신 회색 스타일 적용) */
                           ${isUnavailable
                             ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
                             : ""}
@@ -169,7 +201,6 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
           <div className="flex gap-4 mt-8 text-sm text-gray-600">
             <div className="flex items-center"><div className="w-4 h-4 border border-gray-300 bg-white mr-2 rounded"></div>예약가능</div>
             <div className="flex items-center"><div className="w-4 h-4 bg-green-500 mr-2 rounded"></div>선택함</div>
-            {/* 요청하신 클래스와 일치하는 범례 아이콘 */}
             <div className="flex items-center"><div className="w-4 h-4 bg-gray-300 mr-2 rounded"></div>예약불가</div>
           </div>
 
