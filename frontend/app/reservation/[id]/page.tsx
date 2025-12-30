@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 
+// ✅ 백엔드 최적화 데이터 구조 (no, st)
+interface SlimSeat {
+  id: number;
+  no: string; 
+  st: "AVAILABLE" | "HELD" | "SOLD"; 
+}
+
+// ✅ UI 로직용 구조
 interface Seat {
   id: number;
-  eventId: number;
   seatNo: string;
-  // 백엔드 Enum과 일치해야 함 (SOLD 또는 BOOKED)
   status: "AVAILABLE" | "HELD" | "SOLD"; 
 }
 
@@ -29,8 +35,10 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
   const [reservationId, setReservationId] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("CARD");
 
-  // 데이터 리프레시 중인지 표시하기 위한 별도 상태 (화면 전체 로딩과 구분)
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // ✅ [추가] 예매 완료 여부 추적 (완료 시에는 대기열 이탈 요청을 보내지 않기 위함)
+  const isCompleted = useRef(false);
 
   useEffect(() => {
     params.then(setResolvedParams);
@@ -41,17 +49,58 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
     fetchSeats(resolvedParams.id);
   }, [resolvedParams]);
 
+  // ✅ [추가] 이탈 감지 및 대기열 정리 (Cleanup Logic)
+  useEffect(() => {
+    if (!resolvedParams) return;
+
+    const leaveQueue = () => {
+      // 예매가 완료된 상태라면 대기열을 떠나는 요청을 보낼 필요가 없음
+      if (isCompleted.current) return;
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const token = localStorage.getItem('accessToken');
+
+      // 브라우저가 닫혀도 요청이 전송되도록 keepalive 옵션 사용
+      fetch(`${baseUrl}/queue/leave/${resolvedParams.id}`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        keepalive: true,
+      }).catch(err => console.error('Leave queue failed:', err));
+    };
+
+    // 1. 브라우저 닫기/새로고침 감지
+    const handleBeforeUnload = () => {
+      leaveQueue();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // 2. 컴포넌트 언마운트(뒤로가기, 페이지 이동) 감지
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      leaveQueue();
+    };
+  }, [resolvedParams]);
+
   const fetchSeats = async (eventId: string, isRefresh = false) => {
     try {
       if (isRefresh) setIsRefreshing(true);
       else setLoading(true);
 
-      const res = await api.get<Seat[]>(`/seats/event/${eventId}`);
+      const res = await api.get<SlimSeat[]>(`/seats/event/${eventId}`);
       
-      const seats = res.data;
+      const slimSeats = res.data;
       const groups: GroupedSeats = {};
 
-      seats.forEach((seat) => {
+      slimSeats.forEach((slim) => {
+        const seat: Seat = {
+          id: slim.id,
+          seatNo: slim.no,
+          status: slim.st
+        };
+
         const rowMatch = seat.seatNo.match(/[A-Z]+/); 
         const row = rowMatch ? rowMatch[0] : "ETC";
 
@@ -77,10 +126,8 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  // 🔄 새로고침 버튼 핸들러
   const handleRefresh = () => {
     if (resolvedParams) {
-      // 선택된 좌석 초기화 (상태가 변했을 수 있으므로)
       setSelectedSeat(null);
       fetchSeats(resolvedParams.id, true);
     }
@@ -92,14 +139,16 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
   };
 
   const handleHoldRequest = async () => {
-    if (!selectedSeat) return;
+    if (!selectedSeat || !resolvedParams) return;
     try {
-      const res = await api.post("/reservations/hold", { seatId: selectedSeat.id });
+      const res = await api.post("/reservations/hold", { seatId: selectedSeat.id, eventId: Number(resolvedParams.id) });
       setReservationId(res.data.reservationId);
       setViewStep("PAYMENT");
     } catch (err: any) {
       alert(err.response?.data?.message || "좌석 선점에 실패했습니다.");
-      if (resolvedParams) fetchSeats(resolvedParams.id);
+      if (err.response?.status === 409 || resolvedParams) {
+        if(resolvedParams) fetchSeats(resolvedParams.id);
+      }
       setSelectedSeat(null);
     }
   };
@@ -108,8 +157,12 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
     if (!reservationId) return;
     try {
       await api.post(`/reservations/confirm/${reservationId}`);
+      
+      // ✅ [추가] 예매 성공 플래그 설정 (이탈 처리 방지)
+      isCompleted.current = true;
+      
       alert("예매가 성공적으로 완료되었습니다!");
-      router.push("/events");
+      router.push("/events"); // 이후 페이지 이동
     } catch (err: any) {
       alert(err.response?.data?.message || "예매 확정에 실패했습니다.");
       setViewStep("SEAT_SELECTION");
@@ -127,7 +180,6 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
       {/* ---------------- 좌석 선택 화면 ---------------- */}
       {viewStep === "SEAT_SELECTION" && (
         <>
-          {/* 상단 타이틀 및 새로고침 버튼 영역 */}
           <div className="flex items-center justify-between w-full max-w-4xl px-4 mt-8 mb-6">
             <h2 className="text-3xl font-bold">좌석 선택</h2>
             
@@ -160,13 +212,13 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                 <div className="w-8 text-center font-bold whitespace-nowrap text-gray-500">{row}열</div>
                 <div className="flex gap-2">
                   {groupedSeats[row].map((seat) => {
-                     const isSelected = selectedSeat?.id === seat.id;
-                     const isAvailable = seat.status === "AVAILABLE";
-                     const isUnavailable = !isAvailable; 
-                     
-                     const seatNumberOnly = seat.seatNo.replace(row, ""); 
+                      const isSelected = selectedSeat?.id === seat.id;
+                      const isAvailable = seat.status === "AVAILABLE";
+                      const isUnavailable = !isAvailable; 
+                      
+                      const seatNumberOnly = seat.seatNo.replace(row, ""); 
 
-                     return (
+                      return (
                       <button
                         key={seat.id}
                         onClick={() => handleSeatClick(seat)}
@@ -190,14 +242,14 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
                       >
                         {seatNumberOnly}
                       </button>
-                     );
+                      );
                   })}
                 </div>
               </div>
             ))}
           </div>
           
-          {/* 범례 (Legend) */}
+          {/* 범례 */}
           <div className="flex gap-4 mt-8 text-sm text-gray-600">
             <div className="flex items-center"><div className="w-4 h-4 border border-gray-300 bg-white mr-2 rounded"></div>예약가능</div>
             <div className="flex items-center"><div className="w-4 h-4 bg-green-500 mr-2 rounded"></div>선택함</div>
@@ -223,7 +275,7 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
         </>
       )}
 
-      {/* ---------------- 결제 화면 (기존 동일) ---------------- */}
+      {/* ---------------- 결제 화면 ---------------- */}
       {viewStep === "PAYMENT" && selectedSeat && (
         <div className="w-full max-w-md mt-10 p-6 bg-white border rounded-xl shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-center border-b pb-4">예매 확인 및 결제</h2>
