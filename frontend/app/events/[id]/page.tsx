@@ -57,7 +57,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
   const handleBookingClick = () => {
     if (!resolvedParams) return;
-    router.push(`/events/queue/${resolvedParams.id}`);
+    router.push(`/events/q/${resolvedParams.id}`);
   };
 
   if (!event) return <div>로딩중...</div>;
