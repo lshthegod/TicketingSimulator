@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, use } from "react"; // Next.js 15에서는 params를 use()로 감싸야 함 (또는 props)
+import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  // params 언랩핑 (Next.js 15)
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
   
   const router = useRouter();
@@ -13,12 +12,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const [serverTime, setServerTime] = useState<Date>(new Date());
   const [isOpened, setIsOpened] = useState(false);
 
-  // Params 처리
   useEffect(() => {
     params.then(setResolvedParams);
   }, [params]);
 
-  // 이벤트 정보 및 서버 시간 가져오기
   useEffect(() => {
     if (!resolvedParams) return;
 
@@ -26,10 +23,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       try {
         const [eventRes, timeRes] = await Promise.all([
           api.get(`/events/${resolvedParams.id}`),
-          api.get("/events/time") // 서버 시간 API
+          api.get("/events/time")
         ]);
         setEvent(eventRes.data);
-        setServerTime(new Date(timeRes.data.serverTime || Date.now())); // 서버 시간이 없으면 로컬 시간 fallback
+        const serverDate = new Date(timeRes.data.serverTime || Date.now());
+        setServerTime(serverDate);
+        
+        if (serverDate >= new Date(eventRes.data.openAt)) {
+            setIsOpened(true);
+        }
       } catch (err) {
         console.error("Failed to fetch event info");
       }
@@ -37,12 +39,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     fetchData();
   }, [resolvedParams]);
 
-  // 1초마다 시간 체크
   useEffect(() => {
     if (!event) return;
     
     const interval = setInterval(() => {
-      // 실제로는 서버 시간을 한번만 받고 로컬에서 +1초씩 더하는게 일반적이지만 간단하게 구현
       setServerTime((prev) => {
         const newTime = new Date(prev.getTime() + 1000);
         if (newTime >= new Date(event.openAt)) {
@@ -54,6 +54,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
     return () => clearInterval(interval);
   }, [event]);
+
+  const handleBookingClick = () => {
+    if (!resolvedParams) return;
+    router.push(`/events/${resolvedParams.id}/queue`);
+  };
 
   if (!event) return <div>로딩중...</div>;
 
@@ -71,7 +76,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
       <div className="pt-4">
         <button
-          onClick={() => router.push(`/reservation/${event.id}`)}
+          onClick={handleBookingClick}
           disabled={!isOpened}
           className={`w-full max-w-xs py-4 text-xl font-bold rounded-full transition-all ${
             isOpened 
