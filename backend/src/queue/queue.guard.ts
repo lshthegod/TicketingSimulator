@@ -1,12 +1,16 @@
 import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
 @Injectable()
 export class ActiveQueueGuard implements CanActivate {
   private readonly redisClient: Redis;
 
-  constructor() {
-    this.redisClient = new Redis({ host: 'localhost', port: 6379 });
+  constructor(private readonly configService: ConfigService) {
+    this.redisClient = new Redis({
+      host: this.configService.get<string>('REDIS_HOST') || 'localhost',
+      port: this.configService.get<number>('REDIS_PORT') || 6379,
+    });
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

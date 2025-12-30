@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SeatEntity, SeatStatus } from './entities/seat.entity';
 import { Repository } from 'typeorm';
 import Redis from 'ioredis';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SeatsService {
@@ -13,10 +14,11 @@ export class SeatsService {
   constructor(
     @InjectRepository(SeatEntity)
     private readonly seatsRepository: Repository<SeatEntity>,
+    private readonly configService: ConfigService,
   ) {
     this.redisClient = new Redis({
-      host: 'localhost',
-      port: 6379,
+      host: this.configService.get<string>('REDIS_HOST') || 'localhost',
+      port: this.configService.get<number>('REDIS_PORT') || 6379,
     });
   }
 
