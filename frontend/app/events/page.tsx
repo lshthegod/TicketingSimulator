@@ -1,7 +1,9 @@
+'use client';
+
 import api from "@/lib/axios";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-// 타입 정의
 interface Event {
   id: number;
   title: string;
@@ -9,18 +11,26 @@ interface Event {
   openAt: string;
 }
 
-// 데이터 가져오기 (Next.js 서버 사이드 페칭)
-async function getEvents() {
-  try {
-    const res = await api.get("/events");
-    return res.data;
-  } catch (error) {
-    return [];
-  }
-}
+export default function EventsPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function EventsPage() {
-  const events: Event[] = await getEvents();
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await api.get("/events");
+        setEvents(res.data);
+      } catch (error) {
+        console.error("이벤트 로딩 실패:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  if (loading) return <div className="p-10 text-center">이벤트를 불러오는 중...</div>;
 
   return (
     <div className="space-y-6">
@@ -31,7 +41,9 @@ export default async function EventsPage() {
             <div>
               <h3 className="text-xl font-bold">{event.title}</h3>
               <p className="text-gray-600">{event.description}</p>
-              <p className="text-sm text-gray-400 mt-2">오픈: {new Date(event.openAt).toLocaleString()}</p>
+              <p className="text-sm text-gray-400 mt-2">
+                오픈: {new Date(event.openAt).toLocaleString()}
+              </p>
             </div>
             <Link 
               href={`/events/${event.id}`} 
@@ -41,7 +53,9 @@ export default async function EventsPage() {
             </Link>
           </div>
         ))}
-        {events.length === 0 && <p className="text-gray-500">등록된 이벤트가 없습니다.</p>}
+        {!loading && events.length === 0 && (
+          <p className="text-gray-500">등록된 이벤트가 없습니다.</p>
+        )}
       </div>
     </div>
   );
