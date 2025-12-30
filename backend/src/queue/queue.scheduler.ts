@@ -9,8 +9,11 @@ export class QueueScheduler {
   // 1초마다 실행
   @Cron(CronExpression.EVERY_SECOND)
   async handleCron() {
+    const eventIds = await this.queueService.getActiveEventIds();
     const ALLOW_COUNT = 10; 
-    // console.log(`${ALLOW_COUNT}명을 대기열에서 허용합니다.`);
-    await this.queueService.allowEntrance(ALLOW_COUNT);
+    
+    await Promise.all(
+      eventIds.map(eventId => this.queueService.allowEntrance(eventId, ALLOW_COUNT))
+    );
   }
 }

@@ -28,7 +28,7 @@ export class ReservationsController {
     return await this.reservationsService.holdSeat(user.id, reservationDto.seatId);
   }
 
-  @UseGuards(JwtAuthGuard, ActiveQueueGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('confirm/:id')
   async confirmReservation(@Req() req: Request, @Param('id') reservationId: number) {
     const user = req['user'];

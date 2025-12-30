@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 
-// ✅ [변경] 백엔드 최적화 데이터 구조 (no, st)
+// ✅ 백엔드 최적화 데이터 구조 (no, st)
 interface SlimSeat {
   id: number;
-  no: string; // seatNo -> no
-  st: "AVAILABLE" | "HELD" | "SOLD"; // status -> st
+  no: string; 
+  st: "AVAILABLE" | "HELD" | "SOLD"; 
 }
 
-// ✅ UI 로직용 구조 (기존 유지)
+// ✅ UI 로직용 구조
 interface Seat {
   id: number;
   seatNo: string;
@@ -37,6 +37,9 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // ✅ [추가] 예매 완료 여부 추적 (완료 시에는 대기열 이탈 요청을 보내지 않기 위함)
+  const isCompleted = useRef(false);
+
   useEffect(() => {
     params.then(setResolvedParams);
   }, [params]);
@@ -46,18 +49,51 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
     fetchSeats(resolvedParams.id);
   }, [resolvedParams]);
 
+  // ✅ [추가] 이탈 감지 및 대기열 정리 (Cleanup Logic)
+  useEffect(() => {
+    if (!resolvedParams) return;
+
+    const leaveQueue = () => {
+      // 예매가 완료된 상태라면 대기열을 떠나는 요청을 보낼 필요가 없음
+      if (isCompleted.current) return;
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const token = localStorage.getItem('accessToken');
+
+      // 브라우저가 닫혀도 요청이 전송되도록 keepalive 옵션 사용
+      fetch(`${baseUrl}/queue/leave/${resolvedParams.id}`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        keepalive: true,
+      }).catch(err => console.error('Leave queue failed:', err));
+    };
+
+    // 1. 브라우저 닫기/새로고침 감지
+    const handleBeforeUnload = () => {
+      leaveQueue();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // 2. 컴포넌트 언마운트(뒤로가기, 페이지 이동) 감지
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      leaveQueue();
+    };
+  }, [resolvedParams]);
+
   const fetchSeats = async (eventId: string, isRefresh = false) => {
     try {
       if (isRefresh) setIsRefreshing(true);
       else setLoading(true);
 
-      // ✅ [변경] SlimSeat[] 형태로 받음
       const res = await api.get<SlimSeat[]>(`/seats/event/${eventId}`);
       
       const slimSeats = res.data;
       const groups: GroupedSeats = {};
 
-      // ✅ [변경] 데이터 매핑 (SlimSeat -> Seat)
       slimSeats.forEach((slim) => {
         const seat: Seat = {
           id: slim.id,
@@ -103,9 +139,9 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
   };
 
   const handleHoldRequest = async () => {
-    if (!selectedSeat) return;
+    if (!selectedSeat || !resolvedParams) return;
     try {
-      const res = await api.post("/reservations/hold", { seatId: selectedSeat.id });
+      const res = await api.post("/reservations/hold", { seatId: selectedSeat.id, eventId: Number(resolvedParams.id) });
       setReservationId(res.data.reservationId);
       setViewStep("PAYMENT");
     } catch (err: any) {
@@ -121,8 +157,12 @@ export default function ReservationPage({ params }: { params: Promise<{ id: stri
     if (!reservationId) return;
     try {
       await api.post(`/reservations/confirm/${reservationId}`);
+      
+      // ✅ [추가] 예매 성공 플래그 설정 (이탈 처리 방지)
+      isCompleted.current = true;
+      
       alert("예매가 성공적으로 완료되었습니다!");
-      router.push("/events");
+      router.push("/events"); // 이후 페이지 이동
     } catch (err: any) {
       alert(err.response?.data?.message || "예매 확정에 실패했습니다.");
       setViewStep("SEAT_SELECTION");
