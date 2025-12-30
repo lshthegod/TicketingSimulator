@@ -188,7 +188,10 @@ export default function (data) {
       if (availableSeatId) {
         const holdRes = http.post(
           `${BASE_URL}/reservations/hold`,
-          JSON.stringify({ seatId: availableSeatId }),
+          JSON.stringify({ 
+            seatId: availableSeatId, 
+            eventId: targetEventId 
+          }),
           { ...authHeaders, tags: { name: 'POST /reservations/hold' } },
         );
         

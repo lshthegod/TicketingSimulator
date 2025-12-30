@@ -143,8 +143,8 @@ export default function QueuePage({ params }: { params: Promise<{ id: string }> 
             </div>
             
             <div className="mt-6 p-3 bg-gray-50 rounded-lg text-sm text-gray-600 border border-gray-100 flex flex-col gap-1">
-               <p><span className="text-blue-600 font-bold">Tip.</span> 새로고침을 하셔도 순서는 유지됩니다.</p>
-               <p className="text-xs text-gray-400">브라우저 창을 닫지 말고 기다려주세요.</p>
+               <p className="text-red-600 font-bold">⚠️ 주의! 새로고침을 하거나 창을 닫으면 대기 순서가 초기화됩니다.</p>
+               <p className="text-xs text-gray-500">이 화면을 유지하고 잠시만 기다려주세요.</p>
             </div>
           </div>
         )}
