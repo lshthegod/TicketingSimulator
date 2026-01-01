@@ -3,7 +3,14 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] gap-8">
-      <h1 className="text-4xl font-bold mb-8">티켓 예매 서비스</h1>
+      <div className="mb-12 text-center">
+        <h1 className="text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 drop-shadow-sm mb-2">
+          Timulator
+        </h1>
+        <p className="text-gray-500 text-lg font-medium">
+          실전 같은 티켓팅 시뮬레이션 서비스
+        </p>
+      </div>
       
       <div className="grid grid-cols-2 gap-6 w-full max-w-md">
         {/* 조회 버튼 -> /events 이동 */}

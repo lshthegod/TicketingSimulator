@@ -4,8 +4,8 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 
 export const metadata: Metadata = {
-  title: "Ticket Service",
-  description: "Next.js Ticketing App",
+  title: "Timulator",
+  description: "실전 같은 티켓팅 시뮬레이션 서비스",
 };
 
 export default function RootLayout({

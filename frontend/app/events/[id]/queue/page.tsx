@@ -30,7 +30,7 @@ export default function QueuePage({ params }: { params: Promise<{ id: string }> 
         setIsEntering(false);
         startPolling();
       } catch (error) {
-        alert("대기열 진입에 실패했습니다.");
+        alert("로그인이 필요합니다.");
         router.back();
       }
     };

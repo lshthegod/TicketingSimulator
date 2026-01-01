@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
@@ -42,8 +43,18 @@ export default function NavBar() {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-blue-600">
-          Timulator
+          
+        <Link href="/" className="flex items-center gap-2 group">
+          <Image 
+            src="/logo.png"   // public 폴더 기준 경로
+            alt="Logo" 
+            width={32}        // 너비 (px)
+            height={32}       // 높이 (px)
+            className="object-contain" // 비율 유지
+          />
+          <span className="text-xl font-bold text-blue-600 group-hover:text-blue-700 transition">
+            {/* Timulator 일단은 주석 처리해둠 */}
+          </span>
         </Link>
         
         <div className="flex items-center space-x-6 text-sm font-medium">
