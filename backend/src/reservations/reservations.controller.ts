@@ -5,6 +5,7 @@ import type { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from '../common/decorators/user.decorator';
 import { ActiveQueueGuard } from 'src/queue/queue.guard';
+import { EventOpenGuard } from 'src/events/event-open.guard';
 
 @Controller('reservations')
 export class ReservationsController {
@@ -16,7 +17,7 @@ export class ReservationsController {
     return await this.reservationsService.findAllByUserId(user.id);
   }
   
-  @UseGuards(JwtAuthGuard, ActiveQueueGuard)
+  @UseGuards(JwtAuthGuard, EventOpenGuard, ActiveQueueGuard)
   @Post('hold')
   async holdSeat(@Req() req: Request, @Body() reservationDto: ReservationDto) {
     const user = req['user'];

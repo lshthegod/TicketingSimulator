@@ -24,7 +24,7 @@ export class EventsController {
       timestamp: Date.now(),
     };
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.eventsService.findOne(id);

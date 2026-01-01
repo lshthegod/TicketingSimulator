@@ -25,7 +25,7 @@ export class SeatsService {
   async findAllByEventId(eventId: number) {
     const cacheKey = `seats:event:${eventId}`;
 
-    const cachedSeats = await this.redisClient.get(`seats:event:${eventId}`);
+    const cachedSeats = await this.redisClient.get(cacheKey);
     if (cachedSeats) {
       return JSON.parse(cachedSeats);
     }
@@ -42,7 +42,7 @@ export class SeatsService {
       st: seat.status,
     }));
 
-    await this.redisClient.set(cacheKey, JSON.stringify(slimSeats), 'EX', 1);
+    await this.redisClient.set(cacheKey, JSON.stringify(slimSeats), 'EX', 5);
 
     return slimSeats;
   }
