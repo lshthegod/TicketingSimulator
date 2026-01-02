@@ -21,7 +21,7 @@ export class EventOpenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const eventId = request.params.id || request.body.eventId;
+    const eventId = request.params?.eventId ?? request.body?.eventId;
 
     if (!eventId) {
       return true;

@@ -24,6 +24,7 @@ import { ensureDatabaseExists } from './database.utils';
 
           autoLoadEntities: true,
           synchronize: true,
+          // logging: true,
         };
       },
     }),
