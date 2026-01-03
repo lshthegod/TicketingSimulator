@@ -29,10 +29,10 @@ export class AuthEntity {
     })
     createdAt: Date;
 
-    @Column({ default: false })
+    @Column({ default: false, name: 'is_guest' })
     isGuest: boolean;
 
-    @OneToMany(() => ReservationEntity, (reservation) => reservation.userId)
+    @OneToMany(() => ReservationEntity, (reservation) => reservation.user)
     reservations: ReservationEntity[];
 }
   

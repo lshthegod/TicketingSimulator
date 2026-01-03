@@ -12,16 +12,16 @@ export class EventEntity {
     @Column({type: 'text', nullable: true})
     description: string;
 
-    @Column({type: 'datetime'})
+    @Column({type: 'datetime', name: 'open_at'})
     openAt: Date;
 
-    @Column({default: 0})
+    @Column({default: 0, name: 'total_seats'})
     totalSeats: number;
 
-    @CreateDateColumn()
+    @CreateDateColumn({name: 'created_at'})
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({name: 'updated_at'})
     updatedAt: Date;
 
     @OneToMany(() => SeatEntity, (seat) => seat.event)

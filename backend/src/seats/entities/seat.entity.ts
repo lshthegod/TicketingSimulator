@@ -25,7 +25,7 @@ export class SeatEntity {
     })
     status: SeatStatus;
 
-    @Column({type: 'datetime', nullable: true})
+    @Column({type: 'datetime', name: 'hold_expires_at', nullable: true})
     holdExpiresAt: Date;
 
     @ManyToOne(() => EventEntity, event => event.seats, {

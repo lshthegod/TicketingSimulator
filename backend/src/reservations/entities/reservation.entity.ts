@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { AuthEntity } from "src/auth/entities/auth.entity";
 import { SeatEntity } from "src/seats/entities/seat.entity";
 
@@ -8,6 +8,10 @@ export enum ReservationStatus {
     CANCELLED = 'CANCELLED',
 }
 
+@Index(
+    'idx_reservations_status_expired',
+    ['status', 'expiredAt']
+)
 @Entity('reservations')
 export class ReservationEntity {
     @PrimaryGeneratedColumn()
@@ -25,7 +29,7 @@ export class ReservationEntity {
     @Column({type: 'enum', enum: ReservationStatus, default: ReservationStatus.PENDING})
     status: ReservationStatus;
 
-    @Column({type: 'datetime', nullable: true})
+    @Column({type: 'datetime', name: 'expired_at', nullable: true})
     expiredAt: Date;
 
     @ManyToOne(() => AuthEntity, (auth) => auth.reservations)
