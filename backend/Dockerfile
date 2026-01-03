@@ -9,7 +9,7 @@ RUN apk add --no-cache tzdata \
 ENV TZ=Asia/Seoul
 
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
 COPY . .
 RUN npm run build
