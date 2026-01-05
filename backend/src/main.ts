@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { DataSource } from 'typeorm';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
@@ -11,6 +12,7 @@ async function bootstrap() {
 
   // app.setGlobalPrefix('api');
   // app.use(morgan('dev'));
+  app.use(helmet());
   app.use(cookieParser());
 
   app.useGlobalPipes(new ValidationPipe(
@@ -29,7 +31,7 @@ async function bootstrap() {
   }
 
   app.enableCors({
-    origin: true,
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
   });
   const port = process.env.PORT ?? 8080;
