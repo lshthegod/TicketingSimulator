@@ -1,4 +1,4 @@
-# TicketingSimulator
+# Ticketing Simulator
 
 대기열, 좌석 선점, 예약 확정 흐름을 포함한 공연/콘서트 티켓 예매 시뮬레이터
 
@@ -48,8 +48,8 @@
 - frontend/.env
 
 ### 2-1. Docker로 실행 (백엔드 + Redis)
-docker-compose.yml에는 Nest(Backend) + Redis만 포함되어 있습니다.
-프론트엔드는 Docker로 실행되지 않으며, 별도로 실행해야 합니다
+docker-compose.yml에는 Nest(Backend) + Redis만 포함되어 있습니다.<br>
+프론트엔드는 Docker로 실행되지 않으며, 별도로 실행해야 합니다.
 
 ```bash
 cd backend
