@@ -1,6 +1,6 @@
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { EventEntity } from 'src/events/entities/event.entity';
 import { ReservationEntity } from 'src/reservations/entities/reservation.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 
 export enum SeatStatus {
     AVAILABLE = 'AVAILABLE',

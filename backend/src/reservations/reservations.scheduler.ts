@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DataSource, LessThan } from 'typeorm';
+import { SeatStatus } from 'src/seats/entities/seat.entity';
 import { ReservationEntity, ReservationStatus } from './entities/reservation.entity';
-import { SeatEntity, SeatStatus } from '../seats/entities/seat.entity';
 
 @Injectable()
 export class ReservationsScheduler {

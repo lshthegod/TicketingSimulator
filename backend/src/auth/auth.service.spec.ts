@@ -1,10 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { AuthEntity } from './entities/auth.entity';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import { AuthService } from './auth.service';
+import { AuthEntity } from './entities/auth.entity';
 
 // 1. 가짜 Repository 만들기 (Mock Object)
 // 실제 DB 대신 이 객체가 호출됩니다.

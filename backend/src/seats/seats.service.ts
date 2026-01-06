@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSeatDto } from './dto/create-seat.dto';
-import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SeatEntity, SeatStatus } from './entities/seat.entity';
 import { Repository } from 'typeorm';
 import Redis from 'ioredis';
-import { ConfigService } from '@nestjs/config';
+import { SeatEntity, SeatStatus } from './entities/seat.entity';
+import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
 
 @Injectable()
 export class SeatsService {

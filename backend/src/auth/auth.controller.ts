@@ -1,10 +1,10 @@
 import { Controller, Post, Body, Res, Req, Get, UseGuards } from '@nestjs/common';
+import { User } from 'src/common/decorators/user.decorator';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { User } from 'src/common/decorators/user.decorator';
 
 @Controller('auth')
 export class AuthController {

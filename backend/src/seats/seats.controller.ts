@@ -1,9 +1,8 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
-import { SeatsService } from './seats.service';
-import { CreateSeatDto } from './dto/create-seat.dto';
-import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
 import { EventOpenGuard } from 'src/events/event-open.guard';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { SeatsService } from './seats.service';
+import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
 
 @Controller('seats')
 export class SeatsController {

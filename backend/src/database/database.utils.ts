@@ -1,5 +1,5 @@
-import * as mysql from 'mysql2/promise';
 import { ConfigService } from '@nestjs/config';
+import * as mysql from 'mysql2/promise';
 
 export async function ensureDatabaseExists(config: ConfigService) {
   const host = config.get<string>('DB_HOST', 'localhost');

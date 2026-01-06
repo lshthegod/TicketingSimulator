@@ -1,13 +1,12 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { AuthEntity } from './entities/auth.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { RegisterDto } from './dto/register.dto';
-import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { randomInt } from 'crypto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { AuthEntity } from './entities/auth.entity';
 
 @Injectable()
 export class AuthService {
@@ -74,9 +73,7 @@ export class AuthService {
                 
         const guestUser = this.authRepository.create({
             email: `guest_${guestNum}@temp.com`,
-            // 임의로 해시화하지 않고 비밀번호를 그대로 저장
-            // password: await bcrypt.hash(guestNum, 10),
-            password: guestNum,
+            password: await bcrypt.hash(guestNum, 10),
             nickname: `게스트_${guestNum}`,
             isGuest: true,
         });

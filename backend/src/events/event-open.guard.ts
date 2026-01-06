@@ -1,8 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 import Redis from 'ioredis';
-
 import { EventEntity } from 'src/events/entities/event.entity';
 
 @Injectable()

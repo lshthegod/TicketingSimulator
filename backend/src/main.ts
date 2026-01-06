@@ -1,20 +1,16 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { AppModule } from './app.module';
 import { DataSource } from 'typeorm';
 import cookieParser from 'cookie-parser';
-import morgan from 'morgan';
 import helmet from 'helmet';
-import { ValidationPipe } from '@nestjs/common';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // app.setGlobalPrefix('api');
-  // app.use(morgan('dev'));
   app.use(helmet());
   app.use(cookieParser());
-
   app.useGlobalPipes(new ValidationPipe(
     {
       forbidNonWhitelisted: true,
@@ -25,9 +21,9 @@ async function bootstrap() {
   const dataSource = app.get(DataSource);
 
   if (dataSource.isInitialized) {
-    console.log('📦 데이터베이스 연결 성공!');
+    console.log('데이터베이스 연결 성공!');
   } else {
-    console.error('❌ 데이터베이스 연결 실패!');
+    console.error('데이터베이스 연결 실패!');
   }
 
   app.enableCors({

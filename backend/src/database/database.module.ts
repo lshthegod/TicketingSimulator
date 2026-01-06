@@ -23,8 +23,6 @@ import { ensureDatabaseExists } from './database.utils';
           database: config.get('DB_NAME'),
 
           autoLoadEntities: true,
-          // synchronize: true,
-          // logging: true,
         };
       },
     }),

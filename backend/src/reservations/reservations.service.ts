@@ -1,9 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { ReservationDto } from './dto/reservation.dto';
-import { DataSource, Repository } from 'typeorm';
-import { ReservationEntity, ReservationStatus } from './entities/reservation.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { SeatEntity, SeatStatus } from 'src/seats/entities/seat.entity';
+import { ReservationEntity, ReservationStatus } from './entities/reservation.entity';
 
 @Injectable()
 export class ReservationsService {

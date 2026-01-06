@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString, IsEnum } from "class-validator";
+import { IsEnum, IsInt, IsNotEmpty, IsString } from "class-validator";
 import { SeatStatus } from '../entities/seat.entity';
 
 export class CreateSeatDto {

@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Req, UnauthorizedException, Param, UseGuards } from '@nestjs/common';
-import { ReservationsService } from './reservations.service';
-import { ReservationDto } from './dto/reservation.dto';
 import type { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { User } from '../common/decorators/user.decorator';
+import { User } from 'src/common/decorators/user.decorator';
 import { ActiveQueueGuard } from 'src/queue/queue.guard';
 import { EventOpenGuard } from 'src/events/event-open.guard';
+import { ReservationsService } from './reservations.service';
+import { ReservationDto } from './dto/reservation.dto';
 
 @Controller('reservations')
 export class ReservationsController {
