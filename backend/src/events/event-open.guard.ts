@@ -1,21 +1,14 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { CanActivate, ExecutionContext, Inject, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import Redis from 'ioredis';
 import { EventEntity } from 'src/events/entities/event.entity';
 
 @Injectable()
 export class EventOpenGuard implements CanActivate {
-  private readonly redisClient: Redis;
-
   constructor(
     private readonly dataSource: DataSource,
-    private readonly configService: ConfigService,
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
   ) {
-    this.redisClient = new Redis({
-      host: this.configService.get<string>('REDIS_HOST') || 'localhost',
-      port: this.configService.get<number>('REDIS_PORT') || 6379,
-    });
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

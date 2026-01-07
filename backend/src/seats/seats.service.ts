@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Redis from 'ioredis';
@@ -8,17 +7,11 @@ import { CreateBulkSeatsDto } from './dto/create-bulk-seats.dto';
 
 @Injectable()
 export class SeatsService {
-  private readonly redisClient: Redis;
-
   constructor(
     @InjectRepository(SeatEntity)
     private readonly seatsRepository: Repository<SeatEntity>,
-    private readonly configService: ConfigService,
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
   ) {
-    this.redisClient = new Redis({
-      host: this.configService.get<string>('REDIS_HOST') || 'localhost',
-      port: this.configService.get<number>('REDIS_PORT') || 6379,
-    });
   }
 
   async findAllByEventId(eventId: number) {
