@@ -1,53 +1,48 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { ConflictException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthEntity } from './entities/auth.entity';
-
-// 1. 가짜 Repository 만들기 (Mock Object)
-// 실제 DB 대신 이 객체가 호출됩니다.
-const mockAuthRepository = {
-  findOne: jest.fn(), // 조회 기능
-  create: jest.fn(),  // 생성 기능
-  save: jest.fn(),    // 저장 기능
-  exists: jest.fn(),  // 존재 여부 확인 (최신 TypeORM 사용 시)
-};
-
-// 가짜 ConfigService
-const mockConfigService = {
-  get: jest.fn((key) => {
-    if (key === 'SALT_ROUNDS') return 10;
-    return null;
-  }),
-};
+import { JwtService } from '@nestjs/jwt';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let repository: typeof mockAuthRepository;
+  let authRepository: Repository<AuthEntity>;
+  let jwtService: JwtService;
+
+  // TypeORM Repository Mock
+  const mockAuthRepository = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
+
+  // JwtService Mock
+  const mockJwtService = {
+    sign: jest.fn(() => 'test_token'),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        // 2. 의존성 주입 (가짜 객체 바꿔치기)
         {
           provide: getRepositoryToken(AuthEntity),
           useValue: mockAuthRepository,
         },
         {
-          provide: ConfigService,
-          useValue: mockConfigService,
+          provide: JwtService,
+          useValue: mockJwtService,
         },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    repository = module.get(getRepositoryToken(AuthEntity));
-  });
+    authRepository = module.get<Repository<AuthEntity>>(getRepositoryToken(AuthEntity));
+    jwtService = module.get<JwtService>(JwtService);
 
-  // 매 테스트마다 가짜 함수 기록 초기화
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -56,46 +51,90 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    const dto = {
-      email: 'test@example.com',
-      nickname: 'tester',
-      password: 'password123',
-    };
+    const dto = { email: 'test@test.com', nickname: 'tester', password: '123' };
 
-    it('성공: 중복이 없으면 유저를 생성하고 반환해야 함', async () => {
-      // [가정] DB에서 이메일과 닉네임을 찾았는데 아무것도 없다 (null)
-      // (findOne 대신 exists를 썼다면 false를 리턴하게 설정)
-      mockAuthRepository.findOne.mockResolvedValue(null); 
-      // 만약 코드에서 exists를 썼다면 아래 주석 해제
-      // mockAuthRepository.exists.mockResolvedValue(false);
+    it('성공 시 유저 정보를 반환해야 함', async () => {
+      // Mock: 이메일, 닉네임 중복 없음
+      jest.spyOn(authRepository, 'findOne').mockResolvedValue(null);
+      // Mock: 비밀번호 해싱
+      jest.spyOn(bcrypt, 'hash').mockImplementation(() => Promise.resolve('hashed_pw'));
+      // Mock: 엔티티 생성 및 저장
+      const savedUser = { id: 1, ...dto, password: 'hashed_pw' };
+      jest.spyOn(authRepository, 'create').mockReturnValue(savedUser as any);
+      jest.spyOn(authRepository, 'save').mockResolvedValue(savedUser as any);
 
-      // [가정] create는 dto 내용을 그대로 객체로 만듦
-      mockAuthRepository.create.mockReturnValue({
-        id: 1,
-        ...dto,
-        password: 'hashedPassword',
-      });
-      
-      // [가정] save는 그냥 통과 (Promise<void>)
-      mockAuthRepository.save.mockResolvedValue(undefined);
-
-      // [실행]
       const result = await service.register(dto);
 
-      // [검증]
-      expect(result).toHaveProperty('id');
-      expect(result.email).toBe(dto.email);
-      expect(mockAuthRepository.save).toHaveBeenCalledTimes(1); // save가 1번 호출됐는지
-      expect(mockAuthRepository.create).toHaveBeenCalledTimes(1);
+      expect(authRepository.findOne).toHaveBeenCalledTimes(2); // 이메일, 닉네임 체크
+      expect(authRepository.save).toHaveBeenCalled();
+      expect(result).toEqual({
+        id: 1,
+        nickname: dto.nickname,
+        email: dto.email,
+      });
     });
 
-    it('실패: 이메일이 중복되면 ConflictException을 던져야 함', async () => {
-      // [가정] 이메일 조회했더니 이미 유저가 있다!
-      mockAuthRepository.findOne.mockResolvedValueOnce({ email: dto.email });
-      // mockAuthRepository.exists.mockResolvedValueOnce(true);
+    it('이메일 중복 시 ConflictException 던짐', async () => {
+      // Mock: 이메일 조회 시 결과 있음
+      jest.spyOn(authRepository, 'findOne').mockResolvedValueOnce({ id: 1 } as any);
 
-      // [실행 & 검증] 에러가 발생하는지 확인
       await expect(service.register(dto)).rejects.toThrow(ConflictException);
+    });
+
+    it('닉네임 중복 시 ConflictException 던짐', async () => {
+      // Mock: 이메일 없음, 닉네임 있음
+      jest.spyOn(authRepository, 'findOne')
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 1 } as any);
+
+      await expect(service.register(dto)).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('login', () => {
+    const dto = { email: 'test@test.com', password: '123' };
+    const user = { id: 1, email: 'test@test.com', password: 'hashed_pw', nickname: 'tester' };
+
+    it('성공 시 토큰을 반환해야 함', async () => {
+      jest.spyOn(authRepository, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
+
+      const result = await service.login(dto);
+
+      expect(jwtService.sign).toHaveBeenCalled();
+      expect(result).toEqual({ accessToken: 'test_token', message: '로그인 성공' });
+    });
+
+    it('유저가 없으면 UnauthorizedException 던짐', async () => {
+      jest.spyOn(authRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('비밀번호 불일치 시 UnauthorizedException 던짐', async () => {
+      jest.spyOn(authRepository, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(false));
+
+      await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('guest', () => {
+    it('게스트 계정 생성 및 토큰 반환', async () => {
+      jest.spyOn(bcrypt, 'hash').mockImplementation(() => Promise.resolve('guest_hashed_pw'));
+      
+      const guestUser = { id: 99, email: 'guest_x@temp.com', nickname: '게스트_x', isGuest: true };
+      jest.spyOn(authRepository, 'create').mockReturnValue(guestUser as any);
+      jest.spyOn(authRepository, 'save').mockResolvedValue(guestUser as any);
+
+      const result = await service.guest();
+
+      expect(authRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+        isGuest: true, // 게스트 플래그 확인
+      }));
+      expect(authRepository.save).toHaveBeenCalled();
+      expect(jwtService.sign).toHaveBeenCalled();
+      expect(result).toEqual({ accessToken: 'test_token', message: '게스트 로그인 성공' });
     });
   });
 });
